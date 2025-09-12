@@ -1,0 +1,12 @@
+
+
+
+IF → if (COND) { INSTRUCCIONES } else { INSTRUCCIONES }
+COND → expr relop expr
+relop → < | > | == | !=
+
+
+DECL → tipo ID = valor ;
+tipo → int | float | char
+
+ID → letra (letra | dígito)*

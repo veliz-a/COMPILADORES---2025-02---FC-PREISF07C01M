@@ -1,19 +1,37 @@
 #include <iostream>
-using namespace std;
+#include <fstream>
+#include <string>
 
-int main(){
-    bool b{};
-    double y{},x{};
-    for (x = 0; x<=5; x=x+0.5){
-        cout << endl << "X es: " << x;
-        if (b == true){
-            cout << endl<< "b es: " << b;
-            y = y + 3;
+int main() {
+    std::ifstream archivo("archivo.txt"); 
+    if (!archivo.is_open()) {
+        std::cerr << "No se pudo abrir el archivo." << std::endl;
+        return 1;
+    }
+
+    char c;
+    std::string palabra = "";
+
+    while (archivo.get(c)) {
+        if (c == '\n' || c == '\r') {
+            continue; // Ignorar saltos de línea
+        }
+
+        if (c == ' ') {
+            if (!palabra.empty()) {
+                std::cout << "Palabra: " << palabra << std::endl;
+                palabra.clear(); // limpia la cadena
+            }
+        } else {
+            palabra += c; // construir la palabra
         }
     }
 
-    cout << endl << "b al final es: " << b;
-    cout << endl << "y al final es: " << y;
-    cout << endl << "y + x al final es: " << y*10000 + x;
-    return x;
+    // mostrar la última palabra
+    if (!palabra.empty()) {
+        std::cout << "Palabra: " << palabra << std::endl;
+    }
+
+    archivo.close();
+    return 0;
 }
