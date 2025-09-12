@@ -219,7 +219,6 @@ private:
         return true;
     }
 };
-
 int main() {
     std::ifstream archivo("archivo.txt");
     if (!archivo.is_open()) {
@@ -227,62 +226,106 @@ int main() {
         return 1;
     }
 
-    std::string linea, bloque;
-    int numLinea = 1;
-    int llavesAbiertas = 0;
-
+    std::string contenidoCompleto;
+    std::string linea;
+    
+    // Leer todo el archivo
     while (std::getline(archivo, linea)) {
-        // Eliminar espacios al inicio y al final
-        linea.erase(0, linea.find_first_not_of(" \t\r\n"));
-        linea.erase(linea.find_last_not_of(" \t\r\n") + 1);
+        contenidoCompleto += linea + " ";
+    }
+    archivo.close();
 
-        if (linea.empty()) {
-            numLinea++;
+    // Tokenizar todo el contenido
+    vector<string> tokens = tokenizar(contenidoCompleto);
+    
+    // Mostrar tokens para debug
+    cout << "Tokens encontrados: ";
+    for (const auto& token : tokens) {
+        cout << "'" << token << "' ";
+    }
+    cout << endl << endl;
+
+    // Separar en bloques de código
+    vector<pair<int, int>> bloques; // (inicio, fin) de cada bloque
+    int inicio = 0;
+    
+    for (int i = 0; i < (int)tokens.size(); i++) {
+        // Buscar bloques que terminen en ';' o que sean estructuras completas
+        if (tokens[i] == ";") {
+            bloques.push_back({inicio, i + 1});
+            inicio = i + 1;
+        }
+        // Buscar estructuras if completas
+        else if (tokens[i] == "if") {
+            int nivelLlaves = 0;
+            int j = i;
+            bool encontroElse = false;
+            
+            // Buscar hasta el final de la estructura if-else
+            while (j < (int)tokens.size()) {
+                if (tokens[j] == "{") nivelLlaves++;
+                if (tokens[j] == "}") {
+                    nivelLlaves--;
+                    if (nivelLlaves == 0 && encontroElse) {
+                        // Terminó la estructura if-else completa
+                        bloques.push_back({inicio, j + 1});
+                        inicio = j + 1;
+                        i = j; // actualizar i para continuar desde aquí
+                        break;
+                    }
+                }
+                if (tokens[j] == "else" && nivelLlaves == 0) {
+                    encontroElse = true;
+                }
+                j++;
+            }
+        }
+    }
+    
+    // Si quedan tokens sin procesar, agregarlos como último bloque
+    if (inicio < (int)tokens.size()) {
+        bloques.push_back({inicio, (int)tokens.size()});
+    }
+
+    // Analizar cada bloque por separado
+    for (int b = 0; b < (int)bloques.size(); b++) {
+        vector<string> tokensBloque = extraerTokens(tokens, bloques[b].first, bloques[b].second);
+        
+        cout << "Analizando bloque " << (b + 1) << ": ";
+        for (const auto& token : tokensBloque) {
+            cout << token << " ";
+        }
+        cout << endl;
+
+        // Intentar parsear como IF completo
+        Parser parser1(tokensBloque);
+        if (parser1.parseIF()) {
+            cout << "  -> Cumple con la gramática IF completa" << endl;
             continue;
         }
 
-        bloque += linea + " ";
-
-        // Contar llaves para saber si el bloque terminó
-        for (char c : linea) {
-            if (c == '{') llavesAbiertas++;
-            if (c == '}') llavesAbiertas--;
+        // Si no es IF, intentar otras gramáticas
+        Parser parser2(tokensBloque);
+        if (parser2.parseCOND()) {
+            cout << "  -> Cumple con la gramática COND" << endl;
+            continue;
         }
 
-        // Si no hay llaves abiertas y la línea termina en ';' o '}', procesamos
-        bool finDeBloque = (llavesAbiertas == 0) && 
-            (linea.find(";") != std::string::npos || linea.find("}") != std::string::npos);
-
-        if (finDeBloque) {
-            vector<string> tokens = tokenizar(bloque);
-            Parser parser(tokens);
-            string resultado;
-
-            if (parser.parseIF()) {
-                resultado = "// Cumple IF";
-            } else {
-                Parser parser2(tokens);
-                if (parser2.parseCOND()) {
-                    resultado = "// Cumple COND";
-                } else {
-                    Parser parser3(tokens);
-                    if (parser3.parseDECL()) {
-                        resultado = "// Cumple DECL";
-                    } else {
-                        resultado = "// Inválida";
-                    }
-                }
-            }
-
-            // Imprimir el bloque original y el resultado
-            cout << "Línea " << (numLinea - 1) << ": " << bloque << resultado << endl;
-
-            bloque.clear();
+        Parser parser3(tokensBloque);
+        if (parser3.parseDECL()) {
+            cout << "  -> Cumple con la gramática DECL" << endl;
+            continue;
+        }
+        
+        // Intentar asignación
+        Parser parser4(tokensBloque);
+        if (parser4.parseASIGNACION()) {
+            cout << "  -> Cumple con la gramática ASIGNACION" << endl;
+            continue;
         }
 
-        numLinea++;
+        cout << "  -> No cumple con ninguna gramática reconocida" << endl;
     }
-
-    archivo.close();
+    
     return 0;
 }
