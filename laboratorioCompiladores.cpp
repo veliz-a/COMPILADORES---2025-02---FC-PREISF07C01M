@@ -61,9 +61,7 @@ class Parser {
 public:
     Parser(const vector<string>& tokens) : tokens(tokens), pos(0) {}
 
-    // --------------------------------------------------------------
-    // PARSER PARA GRAMÁTICA DE CONDICIONALES (if-else)
-    // --------------------------------------------------------------
+    // Condicionales if-else
     bool parseIF() {
         if (!match("if")) return false;
         if (!match("(")) return false;
@@ -79,9 +77,7 @@ public:
         return true;
     }
 
-    // --------------------------------------------------------------
-    // PARSER PARA CONDICIÓN DE IF (expr relop expr)
-    // --------------------------------------------------------------
+    // Condición: expr relop expr
     bool parseCOND() {
         if (!parseEXPR()) return false;
         if (!parseRELOP()) return false;
@@ -89,9 +85,7 @@ public:
         return true;
     }
 
-    // --------------------------------------------------------------
-    // PARSER PARA OPERADORES RELACIONALES (<, >, ==, !=)
-    // --------------------------------------------------------------
+    // Operadores relacionales
     bool parseRELOP() {
         if (pos >= (int)tokens.size()) return false;
         string t = tokens[pos];
@@ -102,16 +96,39 @@ public:
         return false;
     }
 
-    // --------------------------------------------------------------
-    // PARSER PARA EXPRESIONES ARITMÉTICAS
-    // Aquí se debe implementar el análisis de expresiones aritméticas
-    // más completo (suma, resta, multiplicación, paréntesis, etc.)
-    // Por ahora solo identifica IDs y valores numéricos.
-    // --------------------------------------------------------------
+    // Expresiones aritméticas (suma/resta)
     bool parseEXPR() {
+        // expr -> term {(+|-) term}
+        if (!parseTerm()) return false; // primer término
+        while (pos < (int)tokens.size() && (tokens[pos] == "+" || tokens[pos] == "-")) {
+            pos++; // consumir operador
+            if (!parseTerm()) return false; // siguiente término
+        }
+        return true;
+    }
+
+    // Termino aritmético (multiplicación/división)
+    bool parseTerm() {
+        // term -> factor {(*|/) factor}
+        if (!parseFactor()) return false; // primer factor
+        while (pos < (int)tokens.size() && (tokens[pos] == "*" || tokens[pos] == "/")) {
+            pos++; // consumir operador
+            if (!parseFactor()) return false; // siguiente factor
+        }
+        return true;
+    }
+
+    // Factor: número, identificador o expresión entre paréntesis
+    bool parseFactor() {
         if (pos >= (int)tokens.size()) return false;
-        // Simplificación: expr es ID o valor numérico literal
-        if (esID(tokens[pos]) || esValor(tokens[pos])) {
+        if (tokens[pos] == "(") { // paréntesis
+            pos++;
+            if (!parseEXPR()) return false;
+            if (pos >= (int)tokens.size() || tokens[pos] != ")") return false;
+            pos++;
+            return true;
+        }
+        if (esID(tokens[pos]) || esValor(tokens[pos])) { // número o identificador
             pos++;
             return true;
         }
