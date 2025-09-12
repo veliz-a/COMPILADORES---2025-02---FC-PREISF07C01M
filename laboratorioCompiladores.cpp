@@ -1,6 +1,20 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <sstream>
+#include <string>
+
+vector<string> tokenizar(const string& texto) {
+    vector<string> tokens;
+    stringstream ss(texto);
+    string token;
+
+    while (ss >> token) {
+        tokens.push_back(token);
+    }
+
+    return tokens;
+}
 
 int main() {
     std::ifstream archivo("archivo.txt"); 
