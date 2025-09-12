@@ -7,12 +7,7 @@
 #include <fstream>
 
 using namespace std;
-
-// ---------------------------------------------
-// Gramática de expresiones aritméticas (1/3)
-// ---------------------------------------------
-// La función 'tokenizar' identifica y separa tokens, incluyendo operadores aritméticos y relacionales.
-// Esta función es utilizada por todos los módulos, pero es esencial para el análisis de expresiones.
+// Tokenizador simple basado en espacios y algunos caracteres especiales
 vector<string> tokenizar(const string& texto) {
     vector<string> tokens;
     string token;
@@ -54,11 +49,11 @@ vector<string> tokenizar(const string& texto) {
     return tokens;
 }
 
-    // ---------------------------------------------
-    // Gramática de condicionales (2/3)
-    // ---------------------------------------------
-    // La clase 'Parser' implementa el análisis de condicionales tipo IF-ELSE.
-    // El método 'parseIF' verifica la estructura de un condicional completo.
+// Parser basado en la gramática proporcionada
+// ------------------------------------------------------------------
+// Clase principal del parser. Aquí se implementan los métodos para
+// cada tipo de gramática: condicionales, declaraciones y expresiones.
+// ------------------------------------------------------------------
 class Parser {
     const vector<string>& tokens;
     int pos;
@@ -66,7 +61,9 @@ class Parser {
 public:
     Parser(const vector<string>& tokens) : tokens(tokens), pos(0) {}
 
-        // Analiza la gramática de condicionales: if (COND) {INSTRUCCIONES} else {INSTRUCCIONES}
+    // --------------------------------------------------------------
+    // PARSER PARA GRAMÁTICA DE CONDICIONALES (if-else)
+    // --------------------------------------------------------------
     bool parseIF() {
         if (!match("if")) return false;
         if (!match("(")) return false;
@@ -82,7 +79,9 @@ public:
         return true;
     }
 
-        // Analiza la condición dentro del IF: EXPR RELOP EXPR
+    // --------------------------------------------------------------
+    // PARSER PARA CONDICIÓN DE IF (expr relop expr)
+    // --------------------------------------------------------------
     bool parseCOND() {
         if (!parseEXPR()) return false;
         if (!parseRELOP()) return false;
@@ -90,7 +89,9 @@ public:
         return true;
     }
 
-        // Analiza operadores relacionales: <, >, ==, !=
+    // --------------------------------------------------------------
+    // PARSER PARA OPERADORES RELACIONALES (<, >, ==, !=)
+    // --------------------------------------------------------------
     bool parseRELOP() {
         if (pos >= (int)tokens.size()) return false;
         string t = tokens[pos];
@@ -101,10 +102,12 @@ public:
         return false;
     }
 
-        // ---------------------------------------------
-        // Gramática de expresiones aritméticas (1/3)
-        // ---------------------------------------------
-        // Analiza expresiones: identificadores o valores numéricos
+    // --------------------------------------------------------------
+    // PARSER PARA EXPRESIONES ARITMÉTICAS
+    // Aquí se debe implementar el análisis de expresiones aritméticas
+    // más completo (suma, resta, multiplicación, paréntesis, etc.)
+    // Por ahora solo identifica IDs y valores numéricos.
+    // --------------------------------------------------------------
     bool parseEXPR() {
         if (pos >= (int)tokens.size()) return false;
         // Simplificación: expr es ID o valor numérico literal
@@ -115,10 +118,11 @@ public:
         return false;
     }
 
-        // ---------------------------------------------
-        // Gramática de declaraciones (3/3)
-        // ---------------------------------------------
-        // Analiza instrucciones: una o más declaraciones
+    // --------------------------------------------------------------
+    // PARSER PARA INSTRUCCIONES (declaraciones)
+    // Aquí se debe implementar el análisis de declaraciones y otras
+    // instrucciones válidas dentro de bloques.
+    // --------------------------------------------------------------
     bool parseINSTRUCCIONES() {
         // Simplificamos: una o más DECLARACIONES
         while (parseDECL()) {
@@ -127,7 +131,9 @@ public:
         return true; // aceptamos 0 o más declaraciones
     }
 
-        // Analiza una declaración: tipo, identificador, valor opcional, punto y coma
+    // --------------------------------------------------------------
+    // PARSER PARA DECLARACIONES DE VARIABLES
+    // --------------------------------------------------------------
     bool parseDECL() {
         int startPos = pos;
         if (!parseTIPO()) return false;
@@ -145,7 +151,9 @@ public:
         return true;
     }
 
-        // Analiza el tipo de dato: int, float, char
+    // --------------------------------------------------------------
+    // PARSER PARA TIPOS DE VARIABLES (int, float, char)
+    // --------------------------------------------------------------
     bool parseTIPO() {
         if (pos >= (int)tokens.size()) return false;
         string t = tokens[pos];
@@ -156,7 +164,9 @@ public:
         return false;
     }
 
-        // Analiza identificadores
+    // --------------------------------------------------------------
+    // PARSER PARA IDENTIFICADORES
+    // --------------------------------------------------------------
     bool parseID() {
         if (pos >= (int)tokens.size()) return false;
         if (esID(tokens[pos])) {
@@ -166,7 +176,9 @@ public:
         return false;
     }
 
-        // Analiza valores: numéricos o char
+    // --------------------------------------------------------------
+    // PARSER PARA VALORES (numéricos o char)
+    // --------------------------------------------------------------
     bool parseVALOR() {
         if (pos >= (int)tokens.size()) return false;
         if (esValor(tokens[pos])) {
@@ -185,7 +197,6 @@ private:
         return false;
     }
 
-        // Verifica si el string es un identificador válido
     bool esID(const string& s) {
         if (s.empty()) return false;
         if (!isalpha(s[0])) return false;
@@ -195,7 +206,6 @@ private:
         return true;
     }
 
-        // Verifica si el string es un valor válido (numérico o char)
     bool esValor(const string& s) {
         // Para simplificar consideramos valor como:
         // un número entero, un número con punto decimal o un char entre comillas
