@@ -264,11 +264,35 @@ int main() {
 
     Parser parser(tokens);
 
-    // Aquí se prueba la gramática de condicionales IF
+    // Prueba la gramática de condicionales IF
     if (parser.parseIF()) {
         cout << "El código es válido según la gramática IF." << endl;
     } else {
         cout << "Error: código inválido." << endl;
+    }
+
+    // Buscar y validar expresiones aritméticas en asignaciones
+    for (size_t i = 0; i < tokens.size(); ++i) {
+        // Buscar el operador de asignación '='
+        if (tokens[i] == "=") {
+            size_t start = i + 1;
+            size_t end = start;
+            // Buscar el punto y coma que termina la expresión
+            while (end < tokens.size() && tokens[end] != ";") {
+                ++end;
+            }
+            // Extraer los tokens de la expresión
+            vector<string> exprTokens(tokens.begin() + start, tokens.begin() + end);
+            if (!exprTokens.empty()) {
+                Parser exprParser(exprTokens);
+                bool valid = exprParser.parseEXPR();
+                // Imprimir resultado
+                cout << "Expresión encontrada: ";
+                for (const auto& t : exprTokens) cout << t << " ";
+                cout << (valid ? "-> válida" : "-> inválida") << endl;
+            }
+            i = end; // continuar después del punto y coma
+        }
     }
 
     return 0;
