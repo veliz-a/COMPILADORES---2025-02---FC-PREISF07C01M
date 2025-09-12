@@ -4,8 +4,15 @@
 #include <cctype>
 #include <sstream>
 
+#include <fstream>
+
 using namespace std;
 
+// ---------------------------------------------
+// Gramática de expresiones aritméticas (1/3)
+// ---------------------------------------------
+// La función 'tokenizar' identifica y separa tokens, incluyendo operadores aritméticos y relacionales.
+// Esta función es utilizada por todos los módulos, pero es esencial para el análisis de expresiones.
 vector<string> tokenizar(const string& texto) {
     vector<string> tokens;
     string token;
@@ -47,6 +54,11 @@ vector<string> tokenizar(const string& texto) {
     return tokens;
 }
 
+    // ---------------------------------------------
+    // Gramática de condicionales (2/3)
+    // ---------------------------------------------
+    // La clase 'Parser' implementa el análisis de condicionales tipo IF-ELSE.
+    // El método 'parseIF' verifica la estructura de un condicional completo.
 class Parser {
     const vector<string>& tokens;
     int pos;
@@ -54,6 +66,7 @@ class Parser {
 public:
     Parser(const vector<string>& tokens) : tokens(tokens), pos(0) {}
 
+        // Analiza la gramática de condicionales: if (COND) {INSTRUCCIONES} else {INSTRUCCIONES}
     bool parseIF() {
         if (!match("if")) return false;
         if (!match("(")) return false;
@@ -69,6 +82,7 @@ public:
         return true;
     }
 
+        // Analiza la condición dentro del IF: EXPR RELOP EXPR
     bool parseCOND() {
         if (!parseEXPR()) return false;
         if (!parseRELOP()) return false;
@@ -76,6 +90,7 @@ public:
         return true;
     }
 
+        // Analiza operadores relacionales: <, >, ==, !=
     bool parseRELOP() {
         if (pos >= (int)tokens.size()) return false;
         string t = tokens[pos];
@@ -86,6 +101,10 @@ public:
         return false;
     }
 
+        // ---------------------------------------------
+        // Gramática de expresiones aritméticas (1/3)
+        // ---------------------------------------------
+        // Analiza expresiones: identificadores o valores numéricos
     bool parseEXPR() {
         if (pos >= (int)tokens.size()) return false;
         // Simplificación: expr es ID o valor numérico literal
@@ -96,6 +115,10 @@ public:
         return false;
     }
 
+        // ---------------------------------------------
+        // Gramática de declaraciones (3/3)
+        // ---------------------------------------------
+        // Analiza instrucciones: una o más declaraciones
     bool parseINSTRUCCIONES() {
         // Simplificamos: una o más DECLARACIONES
         while (parseDECL()) {
@@ -104,6 +127,7 @@ public:
         return true; // aceptamos 0 o más declaraciones
     }
 
+        // Analiza una declaración: tipo, identificador, valor opcional, punto y coma
     bool parseDECL() {
         int startPos = pos;
         if (!parseTIPO()) return false;
@@ -121,6 +145,7 @@ public:
         return true;
     }
 
+        // Analiza el tipo de dato: int, float, char
     bool parseTIPO() {
         if (pos >= (int)tokens.size()) return false;
         string t = tokens[pos];
@@ -131,6 +156,7 @@ public:
         return false;
     }
 
+        // Analiza identificadores
     bool parseID() {
         if (pos >= (int)tokens.size()) return false;
         if (esID(tokens[pos])) {
@@ -140,6 +166,7 @@ public:
         return false;
     }
 
+        // Analiza valores: numéricos o char
     bool parseVALOR() {
         if (pos >= (int)tokens.size()) return false;
         if (esValor(tokens[pos])) {
@@ -158,6 +185,7 @@ private:
         return false;
     }
 
+        // Verifica si el string es un identificador válido
     bool esID(const string& s) {
         if (s.empty()) return false;
         if (!isalpha(s[0])) return false;
@@ -167,6 +195,7 @@ private:
         return true;
     }
 
+        // Verifica si el string es un valor válido (numérico o char)
     bool esValor(const string& s) {
         // Para simplificar consideramos valor como:
         // un número entero, un número con punto decimal o un char entre comillas
@@ -192,23 +221,28 @@ private:
 };
 
 int main() {
-    cout << "Ingrese código para parsear:\n";
-    string codigo;
-    string linea;
-    while (getline(cin, linea)) {
-        if (linea.empty()) break;
+    // Leer el contenido de archivo.txt
+    std::ifstream archivo("archivo.txt");
+    if (!archivo.is_open()) {
+        cout << "No se pudo abrir archivo.txt" << endl;
+        return 1;
+    }
+    string codigo, linea;
+    while (getline(archivo, linea)) {
         codigo += linea + " ";
     }
+    archivo.close();
 
     vector<string> tokens = tokenizar(codigo);
 
     Parser parser(tokens);
 
+    // Aquí se prueba la gramática de condicionales IF
     if (parser.parseIF()) {
-        cout << "El código es válido según la gramática IF.\n";
+        cout << "El código es válido según la gramática IF." << endl;
     } else {
-        cout << "Error: código inválido.\n";
+        cout << "Error: código inválido." << endl;
     }
 
-    return 0;
+    return 0;
 }
