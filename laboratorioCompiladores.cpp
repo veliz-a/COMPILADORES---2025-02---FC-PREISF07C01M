@@ -66,8 +66,10 @@ class Parser {
 public:
     Parser(const vector<string>& tokens) : tokens(tokens), pos(0) {}
 
-        // Analiza la gramática de condicionales: if (COND) {INSTRUCCIONES} else {INSTRUCCIONES}
+    // Analiza la gramática de condicionales: if (COND) {INSTRUCCIONES} else {INSTRUCCIONES}
     bool parseIF() {
+        int startPos = pos;
+        
         if (!match("if")) return false;
         if (!match("(")) return false;
         if (!parseCOND()) return false;
@@ -79,10 +81,17 @@ public:
         if (!match("{")) return false;
         if (!parseINSTRUCCIONES()) return false;
         if (!match("}")) return false;
+        
+        // Verificar que se consumieron todos los tokens
+        if (pos != (int)tokens.size()) {
+            pos = startPos;
+            return false;
+        }
+
         return true;
     }
 
-        // Analiza la condición dentro del IF: EXPR RELOP EXPR
+    // Analiza la condición dentro del IF: EXPR RELOP EXPR
     bool parseCOND() {
         if (!parseEXPR()) return false;
         if (!parseRELOP()) return false;
@@ -90,7 +99,7 @@ public:
         return true;
     }
 
-        // Analiza operadores relacionales: <, >, ==, !=
+    // Analiza operadores relacionales: <, >, ==, !=
     bool parseRELOP() {
         if (pos >= (int)tokens.size()) return false;
         string t = tokens[pos];
@@ -101,51 +110,94 @@ public:
         return false;
     }
 
-        // ---------------------------------------------
-        // Gramática de expresiones aritméticas (1/3)
-        // ---------------------------------------------
-        // Analiza expresiones: identificadores o valores numéricos
+    // Analiza expresiones: identificadores, valores numéricos o expresiones aritméticas
     bool parseEXPR() {
         if (pos >= (int)tokens.size()) return false;
-        // Simplificación: expr es ID o valor numérico literal
+        
+        // Caso simple: ID o valor
         if (esID(tokens[pos]) || esValor(tokens[pos])) {
             pos++;
+            
+            // Verificar si hay operación aritmética
+            if (pos < (int)tokens.size() && esOperadorAritmetico(tokens[pos])) {
+                pos++; // consumir operador
+                if (pos < (int)tokens.size() && (esID(tokens[pos]) || esValor(tokens[pos]))) {
+                    pos++; // consumir segundo operando
+                    return true;
+                }
+                pos--; // rollback si no hay segundo operando
+            }
             return true;
         }
         return false;
     }
 
-        // ---------------------------------------------
-        // Gramática de declaraciones (3/3)
-        // ---------------------------------------------
-        // Analiza instrucciones: una o más declaraciones
+    // Analiza instrucciones: una o más declaraciones o asignaciones
     bool parseINSTRUCCIONES() {
-        // Simplificamos: una o más DECLARACIONES
-        while (parseDECL()) {
-            // parseDECL avanza pos si tiene éxito
+        // Aceptamos 0 o más instrucciones (declaraciones o asignaciones)
+        while (pos < (int)tokens.size() && tokens[pos] != "}") {
+            int startPos = pos;
+            
+            if (!parseDECL() && !parseASIGNACION()) {
+                pos = startPos;
+                break;
+            }
         }
-        return true; // aceptamos 0 o más declaraciones
+        return true;
     }
 
-        // Analiza una declaración: tipo, identificador, valor opcional, punto y coma
+    // Nueva función para manejar asignaciones: ID = EXPR ;
+    bool parseASIGNACION() {
+        int startPos = pos;
+        
+        if (!parseID()) {
+            pos = startPos;
+            return false;
+        }
+        if (!match("=")) {
+            pos = startPos;
+            return false;
+        }
+        if (!parseEXPR()) {
+            pos = startPos;
+            return false;
+        }
+        if (!match(";")) {
+            pos = startPos;
+            return false;
+        }
+        
+        return true;
+    }
+
+    // Analiza una declaración: tipo, identificador, valor opcional, punto y coma
     bool parseDECL() {
         int startPos = pos;
-        if (!parseTIPO()) return false;
-        if (!parseID()) return false;
+        if (!parseTIPO()) {
+            pos = startPos;
+            return false;
+        }
+        if (!parseID()) {
+            pos = startPos;
+            return false;
+        }
 
         if (match("=")) {
-            if (!parseVALOR()) return false;
+            if (!parseVALOR()) {
+                pos = startPos;
+                return false;
+            }
         }
 
         if (!match(";")) {
-            pos = startPos; // rollback
+            pos = startPos;
             return false;
         }
 
         return true;
     }
 
-        // Analiza el tipo de dato: int, float, char
+    // Analiza el tipo de dato: int, float, char
     bool parseTIPO() {
         if (pos >= (int)tokens.size()) return false;
         string t = tokens[pos];
@@ -156,7 +208,7 @@ public:
         return false;
     }
 
-        // Analiza identificadores
+    // Analiza identificadores
     bool parseID() {
         if (pos >= (int)tokens.size()) return false;
         if (esID(tokens[pos])) {
@@ -166,7 +218,7 @@ public:
         return false;
     }
 
-        // Analiza valores: numéricos o char
+    // Analiza valores: numéricos o char
     bool parseVALOR() {
         if (pos >= (int)tokens.size()) return false;
         if (esValor(tokens[pos])) {
@@ -185,7 +237,7 @@ private:
         return false;
     }
 
-        // Verifica si el string es un identificador válido
+    // Verifica si el string es un identificador válido
     bool esID(const string& s) {
         if (s.empty()) return false;
         if (!isalpha(s[0])) return false;
@@ -195,13 +247,9 @@ private:
         return true;
     }
 
-        // Verifica si el string es un valor válido (numérico o char)
+    // Verifica si el string es un valor válido (numérico o char)
     bool esValor(const string& s) {
-        // Para simplificar consideramos valor como:
-        // un número entero, un número con punto decimal o un char entre comillas
-        // numérico
         bool punto = false;
-        int start = 0;
         if (s.empty()) return false;
 
         if (s[0] == '\'') { // char literal simple 'a'
@@ -218,7 +266,22 @@ private:
         }
         return true;
     }
+    
+    // Verifica si es un operador aritmético
+    bool esOperadorAritmetico(const string& s) {
+        return s == "+" || s == "-" || s == "*" || s == "/";
+    }
 };
+// Función para extraer una porción de tokens desde una posición
+vector<string> extraerTokens(const vector<string>& tokens, int inicio, int fin) {
+    vector<string> resultado;
+    for (int i = inicio; i < fin && i < (int)tokens.size(); i++) {
+        resultado.push_back(tokens[i]);
+    }
+    return resultado;
+}
+
+
 int main() {
     std::ifstream archivo("archivo.txt");
     if (!archivo.is_open()) {
