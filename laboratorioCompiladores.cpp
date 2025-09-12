@@ -63,6 +63,8 @@ public:
 
     // Condicionales if-else
     bool parseIF() {
+        int startPos = pos;
+        
         if (!match("if")) return false;
         if (!match("(")) return false;
         if (!parseCOND()) return false;
@@ -74,6 +76,13 @@ public:
         if (!match("{")) return false;
         if (!parseINSTRUCCIONES()) return false;
         if (!match("}")) return false;
+        
+        // Verificar que se consumieron todos los tokens
+        if (pos != (int)tokens.size()) {
+            pos = startPos;
+            return false;
+        }
+
         return true;
     }
 
@@ -137,15 +146,42 @@ public:
 
     // --------------------------------------------------------------
     // PARSER PARA INSTRUCCIONES (declaraciones)
-    // Aquí se debe implementar el análisis de declaraciones y otras
-    // instrucciones válidas dentro de bloques.
-    // --------------------------------------------------------------
+    // Analiza instrucciones: una o más declaraciones o asignaciones
     bool parseINSTRUCCIONES() {
-        // Simplificamos: una o más DECLARACIONES
-        while (parseDECL()) {
-            // parseDECL avanza pos si tiene éxito
+        // Aceptamos 0 o más instrucciones (declaraciones o asignaciones)
+        while (pos < (int)tokens.size() && tokens[pos] != "}") {
+            int startPos = pos;
+            
+            if (!parseDECL() && !parseASIGNACION()) {
+                pos = startPos;
+                break;
+            }
         }
-        return true; // aceptamos 0 o más declaraciones
+        return true;
+    }
+
+    // Nueva función para manejar asignaciones: ID = EXPR ;
+    bool parseASIGNACION() {
+        int startPos = pos;
+        
+        if (!parseID()) {
+            pos = startPos;
+            return false;
+        }
+        if (!match("=")) {
+            pos = startPos;
+            return false;
+        }
+        if (!parseEXPR()) {
+            pos = startPos;
+            return false;
+        }
+        if (!match(";")) {
+            pos = startPos;
+            return false;
+        }
+        
+        return true;
     }
 
     // --------------------------------------------------------------
@@ -247,14 +283,23 @@ private:
     }
 };
 
+// Función para extraer una porción de tokens desde una posición
+vector<string> extraerTokens(const vector<string>& tokens, int inicio, int fin) {
+    vector<string> resultado;
+    for (int i = inicio; i < fin && i < (int)tokens.size(); i++) {
+        resultado.push_back(tokens[i]);
+    }
+    return resultado;
+}
+
 int main() {
-    // Leer el contenido de archivo.txt
+    // Leer y tokenizar archivo.txt una sola vez
     std::ifstream archivo("archivo.txt");
     if (!archivo.is_open()) {
         cout << "No se pudo abrir archivo.txt" << endl;
         return 1;
     }
-    string codigo, linea;
+    std::string codigo, linea;
     while (getline(archivo, linea)) {
         codigo += linea + " ";
     }
@@ -262,38 +307,147 @@ int main() {
 
     vector<string> tokens = tokenizar(codigo);
 
-    Parser parser(tokens);
-
-    // Prueba la gramática de condicionales IF
-    if (parser.parseIF()) {
-        cout << "El código es válido según la gramática IF." << endl;
-    } else {
-        cout << "Error: código inválido." << endl;
+    // Mostrar tokens para debug
+    cout << "Tokens encontrados: ";
+    for (const auto& token : tokens) {
+        cout << "'" << token << "' ";
     }
+    cout << endl << endl;
 
-    // Buscar y validar expresiones aritméticas en asignaciones
-    for (size_t i = 0; i < tokens.size(); ++i) {
-        // Buscar el operador de asignación '='
-        if (tokens[i] == "=") {
-            size_t start = i + 1;
-            size_t end = start;
-            // Buscar el punto y coma que termina la expresión
-            while (end < tokens.size() && tokens[end] != ";") {
-                ++end;
+    // Separar en bloques de código
+    vector<pair<int, int>> bloques; // (inicio, fin) de cada bloque
+    int inicio = 0;
+    for (int i = 0; i < (int)tokens.size(); i++) {
+        if (tokens[i] == ";") {
+            bloques.push_back({inicio, i + 1});
+            inicio = i + 1;
+        }
+        else if (tokens[i] == "if") {
+            int nivelLlaves = 0;
+            int j = i;
+            bool encontroElse = false;
+            while (j < (int)tokens.size()) {
+                if (tokens[j] == "{") nivelLlaves++;
+                if (tokens[j] == "}") {
+                    nivelLlaves--;
+                    if (nivelLlaves == 0 && encontroElse) {
+                        bloques.push_back({inicio, j + 1});
+                        inicio = j + 1;
+                        i = j;
+                        break;
+                    }
+                }
+                if (tokens[j] == "else" && nivelLlaves == 0) {
+                    encontroElse = true;
+                }
+                j++;
             }
-            // Extraer los tokens de la expresión
-            vector<string> exprTokens(tokens.begin() + start, tokens.begin() + end);
-            if (!exprTokens.empty()) {
-                Parser exprParser(exprTokens);
-                bool valid = exprParser.parseEXPR();
-                // Imprimir resultado
-                cout << "Expresión encontrada: ";
-                for (const auto& t : exprTokens) cout << t << " ";
-                cout << (valid ? "-> válida" : "-> inválida") << endl;
-            }
-            i = end; // continuar después del punto y coma
         }
     }
+    if (inicio < (int)tokens.size()) {
+        bloques.push_back({inicio, (int)tokens.size()});
+    }
 
+    // Analizar cada bloque por separado
+    for (int b = 0; b < (int)bloques.size(); b++) {
+        vector<string> tokensBloque = extraerTokens(tokens, bloques[b].first, bloques[b].second);
+        cout << "Analizando bloque " << (b + 1) << ": ";
+        for (const auto& token : tokensBloque) {
+            cout << token << " ";
+        }
+        cout << endl;
+
+        // Test condicionales IF
+        Parser parser1(tokensBloque);
+        if (parser1.parseIF()) {
+            cout << "  -> Cumple con la gramática IF completa" << endl;
+            // Analizar instrucciones dentro de llaves
+            for (size_t i = 0; i < tokensBloque.size(); ++i) {
+                if (tokensBloque[i] == "{") {
+                    size_t j = i + 1;
+                    while (j < tokensBloque.size() && tokensBloque[j] != "}") {
+                        size_t start = j;
+                        while (j < tokensBloque.size() && tokensBloque[j] != ";" && tokensBloque[j] != "}") {
+                            ++j;
+                        }
+                        if (j > start) {
+                            vector<string> instr(tokensBloque.begin() + start, tokensBloque.begin() + j + 1);
+                            Parser p(instr);
+                            if (p.parseDECL()) {
+                                cout << "    -> Declaración válida: ";
+                                for (const auto& t : instr) cout << t << " ";
+                                cout << endl;
+                            } else if (p.parseASIGNACION()) {
+                                cout << "    -> Asignación válida: ";
+                                for (const auto& t : instr) cout << t << " ";
+                                cout << endl;
+                            } else {
+                                cout << "    -> Instrucción no reconocida: ";
+                                for (const auto& t : instr) cout << t << " ";
+                                cout << endl;
+                            }
+                        }
+                        ++j;
+                    }
+                }
+            }
+            continue;
+        } else {
+            // Si el bloque parece un IF pero no es válido, analizar instrucciones internas
+            bool tieneLlaves = false;
+            for (size_t i = 0; i < tokensBloque.size(); ++i) {
+                if (tokensBloque[i] == "{") {
+                    tieneLlaves = true;
+                    size_t j = i + 1;
+                    while (j < tokensBloque.size() && tokensBloque[j] != "}") {
+                        size_t start = j;
+                        while (j < tokensBloque.size() && tokensBloque[j] != ";" && tokensBloque[j] != "}") {
+                            ++j;
+                        }
+                        if (j > start) {
+                            vector<string> instr(tokensBloque.begin() + start, tokensBloque.begin() + j + 1);
+                            Parser p(instr);
+                            if (p.parseDECL()) {
+                                cout << "    -> Declaración válida: ";
+                                for (const auto& t : instr) cout << t << " ";
+                                cout << endl;
+                            } else if (p.parseASIGNACION()) {
+                                cout << "    -> Asignación válida: ";
+                                for (const auto& t : instr) cout << t << " ";
+                                cout << endl;
+                            } else {
+                                cout << "    -> Instrucción no reconocida: ";
+                                for (const auto& t : instr) cout << t << " ";
+                                cout << endl;
+                            }
+                        }
+                        ++j;
+                    }
+                }
+            }
+            if (tieneLlaves) {
+                cout << "  -> IF/ELSE inválido, pero se analizaron instrucciones internas." << endl;
+            }
+        }
+        // Test condiciones
+        Parser parser2(tokensBloque);
+        if (parser2.parseCOND()) {
+            cout << "  -> Cumple con la gramática COND" << endl;
+            continue;
+        }
+        // Test declaraciones
+        Parser parser3(tokensBloque);
+        if (parser3.parseDECL()) {
+            cout << "  -> Cumple con la gramática DECL" << endl;
+            continue;
+        }
+        // Test asignaciones
+        Parser parser4(tokensBloque);
+        if (parser4.parseASIGNACION()) {
+            cout << "  -> Cumple con la gramática ASIGNACION" << endl;
+            continue;
+        }
+        cout << "  -> No cumple con ninguna gramática reconocida" << endl;
+    }
     return 0;
 }
