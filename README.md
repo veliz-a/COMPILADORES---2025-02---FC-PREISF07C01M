@@ -19,14 +19,19 @@ main/ veliz
 - 5190ec5 HugoRN19 (2025-09-12): Update archivo.txt
   
 - ba64e18 Alejandra Veliz (2025-09-12): Comentario explicativo o cambios realizados
+
   Se agregaron comentarios para un mejor ordenamiento del código. Se realizó un cambio en la función bien relativo a la lectura de archivo.txt
 - 22ad3a5 Alejandra Veliz (2025-09-12): Primera version de Parsers
+
   Se creó la función tokenizar y la clase Parser.
 - 694facd Alejandra Veliz (2025-09-12): Inicio Tarea 2 commit
+
   Se pego el codigo de ejemplo proporcionado por el profesor en ‎laboratorioCompiladores.cpp, ademas se agrego archivos.txt y gramatica.txt.
 - 52a5511 Alejandra Veliz (2025-09-12): Initial commit
+
   Se creo los archivos cpp, se observa se esta reutilizando el archivo de un codigo de un ejercicio previo realizado en clase.
 - ed23823 Alejandra Veliz (2025-09-12): first commit
+
   Se colocó información del título de la tarea.
 
 
@@ -39,3 +44,4 @@ rama Solari
 - 694facd Alejandra Veliz (2025-09-12): Inicio Tarea 2 commit
 - 52a5511 Alejandra Veliz (2025-09-12): Initial commit
 - ed23823 Alejandra Veliz (2025-09-12): first commit
+
