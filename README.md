@@ -2,10 +2,11 @@
 
 *.exe
 
-Informe de commits realizados:
+Informe de commits realizados ordenados del ultimo al primero:
 main/ veliz
 - b9f08fe Alejandra Veliz (2025-09-12): Merge pull request #1 from veliz-a/veliz-branch
   
+  En esta actualización de laboratorioCompiladores.cpp se reemplazó el procesamiento manual de caracteres por un tokenizador dedicado que identifica palabras, números, símbolos y operadores relacionales (==, !=). La clase Parser fue reestructurada para ser más modular y clara, incorporando funciones auxiliares para validar identificadores y valores, además de ampliar las reglas para tipos de datos (int, float, char), valores numéricos, decimales y caracteres entre comillas. El main también se simplificó, mostrando primero los tokens obtenidos y luego analizando cada bloque de código de forma independiente con la gramática de declaraciones, asignaciones y condicionales.
 - 3469426 Alejandra Veliz (2025-09-12): Versión lista para presentación
 
   En esta versión de laboratorioCompiladores.cpp se amplió considerablemente la funcionalidad del parser: se añadió la función parseASIGNACION() para reconocer instrucciones del tipo ID = EXPR; (por ejemplo: x = 5;), se mejoró parseINSTRUCCIONES() para aceptar tanto declaraciones como asignaciones dentro de bloques { ... } y se incorporó la función auxiliar extraerTokens() para manipular subconjuntos de tokens (se decidio agregar esto debido a que las llaves del IF estan en lineas distintas en varios casos). En el main() ya no se valida solo un if, sino que ahora se muestran los tokens en modo debug, se separa el código en bloques (delimitados por ; o estructuras if/else) y se analiza cada bloque de forma independiente contra distintas gramáticas (IF, COND, DECL, ASIGNACION), validando además las instrucciones internas de los bloques con llaves.
@@ -56,6 +57,7 @@ rama Solari
 - 694facd Alejandra Veliz (2025-09-12): Inicio Tarea 2 commit
 - 52a5511 Alejandra Veliz (2025-09-12): Initial commit
 - ed23823 Alejandra Veliz (2025-09-12): first commit
+
 
 
 
