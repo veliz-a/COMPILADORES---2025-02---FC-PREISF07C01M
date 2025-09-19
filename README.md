@@ -24,9 +24,12 @@ main/ veliz
 - 22ad3a5 Alejandra Veliz (2025-09-12): Primera version de Parsers
 
   Se creó la función tokenizar y la clase Parser.
+  La función tokenizar Recorre el string de entrada y separa en tokens. Detecta:Espacios en blanco, Operadores de 2 caracteres (==, !=), Delimitadores de 1 carácter ((){}=;<>!) y Palabras (identificadores, números).
+  La clase parser recibe los tokens y verifica que la secuencia siga las reglas gramaticales planteadas en gramatica.txt mediante los métodos que posee.
 - 694facd Alejandra Veliz (2025-09-12): Inicio Tarea 2 commit
 
   Se pego el codigo de ejemplo proporcionado por el profesor en ‎laboratorioCompiladores.cpp, ademas se agrego archivos.txt y gramatica.txt.
+  
 - 52a5511 Alejandra Veliz (2025-09-12): Initial commit
 
   Se creo los archivos cpp, se observa se esta reutilizando el archivo de un codigo de un ejercicio previo realizado en clase.
@@ -44,4 +47,5 @@ rama Solari
 - 694facd Alejandra Veliz (2025-09-12): Inicio Tarea 2 commit
 - 52a5511 Alejandra Veliz (2025-09-12): Initial commit
 - ed23823 Alejandra Veliz (2025-09-12): first commit
+
 
