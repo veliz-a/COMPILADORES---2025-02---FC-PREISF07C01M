@@ -6,15 +6,24 @@ Informe de commits realizados:
 main/ veliz
 - b9f08fe Alejandra Veliz (2025-09-12): Merge pull request #1 from veliz-a/veliz-branch
   
-- 3469426 Alejandra Veliz (2025-09-12): Versi├│n lista para presentaci├│n
+- 3469426 Alejandra Veliz (2025-09-12): Versión lista para presentación
+
+  En esta versión de laboratorioCompiladores.cpp se amplió considerablemente la funcionalidad del parser: se añadió la función parseASIGNACION() para reconocer instrucciones del tipo ID = EXPR; (por ejemplo: x = 5;), se mejoró parseINSTRUCCIONES() para aceptar tanto declaraciones como asignaciones dentro de bloques { ... } y se incorporó la función auxiliar extraerTokens() para manipular subconjuntos de tokens (se decidio agregar esto debido a que las llaves del IF estan en lineas distintas en varios casos). En el main() ya no se valida solo un if, sino que ahora se muestran los tokens en modo debug, se separa el código en bloques (delimitados por ; o estructuras if/else) y se analiza cada bloque de forma independiente contra distintas gramáticas (IF, COND, DECL, ASIGNACION), validando además las instrucciones internas de los bloques con llaves.
   
-- 62d9287 Alejandra Veliz (2025-09-12): Validador autom├ítico de expresiones aritm├®ticas en asignaciones
+- 62d9287 Alejandra Veliz (2025-09-12): Validador automático de expresiones aritméticas en asignaciones
+
+  Se agregó un bloque nuevo de validación de expresiones aritméticas en asignaciones dentro del main(). Ya que previamente solo validaba el IF.
   
-- 465aaf5 Alejandra Veliz (2025-09-12): Mejoras en el parser de expresiones aritm├®ticas
+- 465aaf5 Alejandra Veliz (2025-09-12): Mejoras en el parser de expresiones aritméticas
+
+  Este commit extiende la gramática del parser para soportar expresiones aritméticas completas (con +, -, *, / y paréntesis), mejorando mucho la capacidad del analizador. 
   
 - b75302d Alejandra Veliz (2025-09-12): Merge branch 'veliz-branch' of https://github.com/veliz-a/COMPILADORES---2025-02---FC-PREISF07C01M into veliz-branch
-  
+
 - 241a006 Alejandra Veliz (2025-09-12): Comentario explicativo o cambios realizados (Improved)
+
+  Se reemplazaron las descripciones anteriores por descripciones más claras y explicativas, con un formato uniforme.
+  El código en sí no cambió la lógica, los métodos (parseIF, parseCOND, parseDECL, etc.) funcionan exactamente igual que antes.
   
 - 5190ec5 HugoRN19 (2025-09-12): Update archivo.txt
   
@@ -47,5 +56,6 @@ rama Solari
 - 694facd Alejandra Veliz (2025-09-12): Inicio Tarea 2 commit
 - 52a5511 Alejandra Veliz (2025-09-12): Initial commit
 - ed23823 Alejandra Veliz (2025-09-12): first commit
+
 
 
